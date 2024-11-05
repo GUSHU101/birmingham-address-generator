@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>随机生成Birmingham地址和英文名字</title>
+    <style>
+        /* 全局样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+
+        /* 页面容器 */
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        /* 页面标题 */
+        h1 {
+            color: #4CAF50;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        /* 地址和名字 */
+        .address, .name {
+            margin-top: 25px;
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        /* 按钮样式 */
+        button {
+            width: 100%;
+            padding: 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        button:hover {
+            background-color: #45a049;
+            transform: translateY(-4px);
+        }
+        button:active {
+            background-color: #388e3c;
+            transform: translateY(2px);
+        }
+
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 输入框样式 */
+        input[type="text"], button {
+            font-size: 1.1em;
+        }
+
+        /* 生成结果样式 */
+        .result {
+            font-size: 1.2em;
+            color: #4CAF50;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                max-width: 90%;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            button {
+                font-size: 1.1em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>生成随机Birmingham地址和英文名字</h1>
+    <button onclick="generateData()">生成地址和名字</button>
+    <div class="result">
+        <div class="name" id="name"></div>
+        <div class="address" id="address"></div>
+    </div>
+</div>
+
+<script>
+    // Birmingham街道和邮政编码映射（增加了更多地址）
+    const streetPostalMap = {
+        "Alcester Road": "B13 8AA",
+        "Bristol Road": "B5 7TU",
+        "Broad Street": "B1 2HF",
+        "Colmore Row": "B3 2BH",
+        "Corporation Street": "B4 7BA",
+        "Digbeth": "B5 6AA",
+        "Edgbaston Road": "B15 1HL",
+        "Hagley Road": "B16 9NY",
+        "New Street": "B2 4ND",
+        "Sparkbrook Street": "B11 1DX",
+        "High Street": "B4 7SR",
+        "King's Road": "B11 2LP",
+        "The Crescent": "B16 9DW",
+        "St. Martin's Square": "B5 4RH",
+        "Vauxhall Road": "B7 4EX",
+        "Summer Lane": "B19 3PB",
+        "Moor Street": "B4 7AD",
+        "Temple Row": "B2 5LG",
+        "Albert Street": "B1 3RR",
+        "Cannon Street": "B1 3PB",
+        "Bordesley Green": "B9 4PB",
+        "Hurst Street": "B5 4TD"
+    };
+
+    // 排除医院和公墓的街道
+    const excludedStreets = [
+        "Queen Elizabeth Hospital", "Birmingham Children's Hospital", "Heartlands Hospital",
+        "Witton Cemetery", "Handswood Cemetery", "St. Thomas' Cemetery"
+    ];
+
+    // 男性英文名字（扩展版）
+    const maleNames = [
+        "James", "John", "Robert", "Michael", "William", "David", "Richard", "Joseph", "Charles", "Thomas", 
+        "Daniel", "Matthew", "Anthony", "Mark", "Steven", "Andrew", "Joshua", "Kevin", "Brian", "Jack", 
+        "Adam", "Samuel", "Benjamin", "Alexander", "Ethan", "Logan", "Henry", "Luke", "Max", "Oscar"
+    ];
+
+    // 女性英文名字（扩展版）
+    const femaleNames = [
+        "Mary", "Patricia", "Jennifer", "Linda", "Elizabeth", "Barbara", "Susan", "Jessica", "Sarah", "Karen", 
+        "Nancy", "Betty", "Helen", "Sandra", "Donna", "Carol", "Ruth", "Sharon", "Michelle", "Laura", 
+        "Sarah", "Kimberly", "Angela", "Lisa", "Rebecca", "Mary", "Julia", "Anna", "Sophia", "Chloe"
+    ];
+
+    // 姓氏
+    const surnames = [
+        "Smith", "Johnson", "Brown", "Taylor", "Williams", "Jones", "Davis", "Miller", "Wilson", "Moore", 
+        "Anderson", "Thomas", "Jackson", "White", "Harris", "Martin", "Thompson", "Garcia", "Martinez", "Rodriguez"
+    ];
+
+    // 存储已生成的姓名
+    let generatedNames = [];
+
+    // 生成地址和名字的函数
+    function generateData() {
+        let fullName;
+
+        // 确保生成的名字不重复
+        do {
+            // 随机选择一个名字（男性或女性）
+            const isMale = Math.random() > 0.5;  // 随机选择性别
+            const firstName = isMale
+                ? maleNames[Math.floor(Math.random() * maleNames.length)] 
+                : femaleNames[Math.floor(Math.random() * femaleNames.length)];
+
+            // 随机选择姓氏
+            const surname = surnames[Math.floor(Math.random() * surnames.length)];
+
+            // 生成完整的姓名 (先名后姓)
+            fullName = `${firstName} ${surname}`;
+        } while (generatedNames.includes(fullName)); // 如果姓名已经存在，则重新生成
+        
+        // 将生成的姓名添加到已生成姓名数组中
+        generatedNames.push(fullName);
+
+        // 从街道映射中过滤出不包含在排除列表中的街道
+        const streets = Object.keys(streetPostalMap).filter(street => !excludedStreets.includes(street)); 
+
+        // 随机选择一个街道
+        const street = streets[Math.floor(Math.random() * streets.length)];
+
+        // 获取对应的邮政编码
+        const postcode = streetPostalMap[street];
+
+        // 随机生成门牌号 (1 - 100)
+        const buildingNumber = Math.floor(Math.random() * 100) + 1;
+
+        // 生成完整的地址
+        const address = `${buildingNumber} ${street}, Birmingham, ${postcode}, UK`;
+
+        // 显示生成的名字和地址
+        document.getElementById("name").innerText = `英文名字: ${fullName}`;
+        document.getElementById("address").innerText = `地址: ${address}`;
+    }
+</script>
+
+</body>
+</html>
